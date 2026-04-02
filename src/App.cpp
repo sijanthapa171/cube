@@ -10,14 +10,11 @@ App::App() :
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };
     camera.fovy = 45.0f;
     camera.projection = CAMERA_PERSPECTIVE;
-
-    cubePosition = { 0.0f, 0.0f, 0.0f };
-    cubeSize = { 4.0f, 4.0f, 4.0f };
 }
 
 void App::Init() {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(screenWidth, screenHeight, "3D Cube in Raylib - 360 View");
+    InitWindow(screenWidth, screenHeight, "3D Rubik's Cube");
     SetTargetFPS(60);
 }
 
@@ -36,7 +33,6 @@ void App::RunLoop() {
         if (cameraAngle.y > 1.5f) cameraAngle.y = 1.5f;
         if (cameraAngle.y < -1.5f) cameraAngle.y = -1.5f;
 
-        // Spherical coordinates mapping 
         camera.position.x = sinf(cameraAngle.x) * cosf(cameraAngle.y) * cameraRadius;
         camera.position.y = sinf(cameraAngle.y) * cameraRadius;
         camera.position.z = cosf(cameraAngle.x) * cosf(cameraAngle.y) * cameraRadius;
@@ -45,14 +41,12 @@ void App::RunLoop() {
         ClearBackground(RAYWHITE);
         BeginMode3D(camera);
 
-        DrawCube(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, MAROON);
-        DrawCubeWires(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, DARKGRAY);
-        DrawGrid(20, 1.0f);
+        rubik.Draw();
 
         EndMode3D();
 
-        DrawText("3D Cube", 10, 10, 20, DARKGRAY);
-        DrawText("- Left Click + Drag to view 360 degrees around the cube", 10, 40, 20, DARKGRAY);
+        DrawText("3D Rubik's Cube", 10, 10, 20, DARKGRAY);
+        DrawText("- Left Click + Drag to view 360 degrees", 10, 40, 20, DARKGRAY);
         DrawText("- Mouse Wheel to zoom in and out", 10, 60, 20, DARKGRAY);
 
         EndDrawing();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "raylib.h"
+#include "RubiksCube.h"
 
 class App {
 public:
@@ -14,8 +15,8 @@ private:
     int screenHeight;
     
     Camera3D camera;
-    Vector3 cubePosition;
-    Vector3 cubeSize;
     Vector2 cameraAngle;
     float cameraRadius;
+
+    RubiksCube rubik;
 };
