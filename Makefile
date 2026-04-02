@@ -4,18 +4,21 @@ LDFLAGS = $(shell pkg-config --libs raylib)
 TARGET = 3d-cube
 
 SRCS = $(wildcard src/*.cpp)
-OBJS = $(SRCS:.cpp=.o)
+OBJS = $(patsubst src/%.cpp,build/%.o,$(SRCS))
 
-all: $(TARGET)
+all: build_dir $(TARGET)
+
+build_dir:
+	mkdir -p build
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS)
 
-src/%.o: src/%.cpp
+build/%.o: src/%.cpp | build_dir
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-run: $(TARGET)
+run: all
 	./$(TARGET)
 
 clean:
-	rm -f $(TARGET) $(OBJS)
+	rm -rf build $(TARGET)
