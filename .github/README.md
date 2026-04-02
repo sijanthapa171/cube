@@ -1,11 +1,10 @@
-# 3D Cube
+# 3D Interactive Rubik's Cube
 
-A lightweight, high-performance 3D graphics application exploring procedural 3D camera matrices and mathematical abstractions in C++. Built around the powerful [Raylib](https://www.raylib.com/) library, the rendering pipeline dynamically draws a centralized grid and wireframed cube entity.
+A high-performance 3D graphics application exploring procedural 3D camera matrices, mathematical abstractions, and interactive raycasting in C++. 
 
 # Preview 
 
 ![Preview](preview.png)
-
 
 ## Running Locally
 
@@ -14,7 +13,7 @@ Because this project natively hooks into **Nix Flakes**, dependency matching and
 1. Clone the repository and navigate inside:
    ```bash
    git clone https://github.com/sijanthapa171/cube.git
-   cd CubeSolver
+   cd cube
    ```
 
 2. Boot into the guaranteed development shell with the required compiler tools:
@@ -30,4 +29,5 @@ Because this project natively hooks into **Nix Flakes**, dependency matching and
 ### Additional Build Commands
 - `make`: Compiles standard object assets safely routing to the `/build` folder.
 - `make clean`: Wipes the generated binary target and `/build` directory cache.
+
 
