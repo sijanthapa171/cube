@@ -1,5 +1,5 @@
 {
-  description = "A simple C++ Hello World project";
+  description = "A simple C++ Raylib development shell";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -12,26 +12,15 @@
       pkgs = forAllSystems (system: nixpkgs.legacyPackages.${system});
     in
     {
-      packages = forAllSystems (system: {
-        default = pkgs.${system}.stdenv.mkDerivation {
-          name = "hello-world";
-          src = ./.;
-
-          buildPhase = ''
-            $CXX -O2 -o hello main.cpp
-          '';
-
-          installPhase = ''
-            mkdir -p $out/bin
-            cp hello $out/bin/
-          '';
-        };
-      });
-
       devShells = forAllSystems (system: {
         default = pkgs.${system}.mkShell {
-          packages = with pkgs.${system}; [
+          nativeBuildInputs = with pkgs.${system}; [ 
+            pkg-config 
+            gnumake 
+          ];
+          buildInputs = with pkgs.${system}; [
             gcc
+            raylib
           ];
         };
       });
