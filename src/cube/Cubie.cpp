@@ -1,7 +1,7 @@
 #include "Cubie.h"
 #include "rlgl.h"
 
-void DrawCubie(Vector3 position, float size,
+void DrawCubie(Matrix transform, float size,
                Color up, Color down,
                Color front, Color back,
                Color right, Color left)
@@ -9,7 +9,13 @@ void DrawCubie(Vector3 position, float size,
     float s = size / 2.0f;
 
     rlPushMatrix();
-    rlTranslatef(position.x, position.y, position.z);
+    float m[16] = {
+        transform.m0, transform.m1,  transform.m2,  transform.m3,
+        transform.m4, transform.m5,  transform.m6,  transform.m7,
+        transform.m8, transform.m9,  transform.m10, transform.m11,
+        transform.m12, transform.m13, transform.m14, transform.m15
+    };
+    rlMultMatrixf(m);
 
     rlBegin(RL_QUADS);
 

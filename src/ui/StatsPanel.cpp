@@ -8,8 +8,6 @@ void DrawStatsPanel(float cameraRadius, Vector2 cameraAngle) {
     int panelX   = sw - panelW - 10;
     int panelY   = 10;
     int fps      = GetFPS();
-    bool autoRot = !IsMouseButtonDown(MOUSE_BUTTON_LEFT);
-
     DrawRectangle(panelX, panelY, panelW, panelH, { 0, 0, 0, 160 });
     DrawRectangleLines(panelX, panelY, panelW, panelH, { 80, 80, 100, 200 });
 
@@ -26,10 +24,4 @@ void DrawStatsPanel(float cameraRadius, Vector2 cameraAngle) {
              panelX + 10, panelY + 56, 15, statColor);
     DrawText(TextFormat("Pitch: %.1f deg", cameraAngle.y * (180.0f / PI)),
              panelX + 10, panelY + 78, 15, statColor);
-
-    Color dotColor = autoRot ? (Color){ 80, 220, 80, 255 }
-                             : (Color){ 220, 60, 60, 255 };
-    DrawCircle(panelX + panelW - 18, panelY + 12, 6, dotColor);
-    DrawText(autoRot ? "Auto-Rotate" : "Manual",
-             panelX + panelW - 100, panelY + 92, 13, { 160, 160, 160, 255 });
 }

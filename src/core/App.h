@@ -18,4 +18,9 @@ private:
     float    cameraRadius;
 
     RubiksCube rubik;
+
+    bool isDraggingRight;
+    Vector2 dragStartMouse;
+    Vector3 hitNormal;
+    Vector3 hitCubieLogical;
 };
