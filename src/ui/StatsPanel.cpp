@@ -19,40 +19,6 @@ static double GetProcessMemoryUsageMB() {
     return 0.0;
 }
 
-static double GetCPUUsage() {
-    static unsigned long long lastTotalUser = 0, lastTotalUserLow = 0, lastTotalSys = 0, lastTotalIdle = 0;
-    
-    std::ifstream file("/proc/stat");
-    std::string line;
-    std::getline(file, line);
-    std::stringstream ss(line);
-    std::string cpuLabel;
-    unsigned long long user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice;
-    
-    user = nice = system = idle = iowait = irq = softirq = steal = guest = guest_nice = 0;
-    ss >> cpuLabel >> user >> nice >> system >> idle >> iowait >> irq >> softirq >> steal >> guest >> guest_nice;
-
-    unsigned long long totalUser = user - guest;
-    unsigned long long totalUserLow = nice - guest_nice;
-    unsigned long long totalSys = system + irq + softirq;
-    unsigned long long totalIdle = idle + iowait;
-
-    unsigned long long total = totalUser + totalUserLow + totalSys + totalIdle;
-    unsigned long long lastTotal = lastTotalUser + lastTotalUserLow + lastTotalSys + lastTotalIdle;
-
-    double percent = 0.0;
-    if (total > lastTotal) {
-        percent = (double)((totalUser + totalUserLow + totalSys) - (lastTotalUser + lastTotalUserLow + lastTotalSys)) / (total - lastTotal) * 100.0;
-    }
-
-    lastTotalUser = totalUser;
-    lastTotalUserLow = totalUserLow;
-    lastTotalSys = totalSys;
-    lastTotalIdle = totalIdle;
-
-    return percent;
-}
-
 void DrawStatsPanel(float cameraRadius, Vector2 cameraAngle) {
     int sw       = GetScreenWidth();
     int panelW   = 230;
@@ -78,7 +44,6 @@ void DrawStatsPanel(float cameraRadius, Vector2 cameraAngle) {
              panelX + 10, panelY + 78, 15, statColor);
              
     double memUsage = GetProcessMemoryUsageMB();
-    double cpuUsage = GetCPUUsage();
     
     DrawText(TextFormat("Memory:   %.1f MB", memUsage),
              panelX + 10, panelY + 100, 15, statColor);
