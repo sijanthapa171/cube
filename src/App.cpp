@@ -1,27 +1,27 @@
-#include "raylib.h"
+#include "App.h"
 #include <math.h>
 
-int main() {
-    const int screenWidth = 800;
-    const int screenHeight = 450;
-
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(screenWidth, screenHeight, "3D Cube in Raylib - 360 View");
-
-    Camera3D camera = { 0 };
+App::App() : 
+    screenWidth(800), screenHeight(450),
+    cameraAngle({0.78f, 0.5f}), cameraRadius(15.0f) {
+    
+    camera = { 0 };
     camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };
     camera.fovy = 45.0f;
     camera.projection = CAMERA_PERSPECTIVE;
 
-    Vector3 cubePosition = { 0.0f, 0.0f, 0.0f };
-    Vector3 cubeSize = { 4.0f, 4.0f, 4.0f };
+    cubePosition = { 0.0f, 0.0f, 0.0f };
+    cubeSize = { 4.0f, 4.0f, 4.0f };
+}
 
-    Vector2 cameraAngle = { 0.78f, 0.5f }; 
-    float cameraRadius = 15.0f;
-
+void App::Init() {
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    InitWindow(screenWidth, screenHeight, "3D Cube in Raylib - 360 View");
     SetTargetFPS(60);
+}
 
+void App::RunLoop() {
     while (!WindowShouldClose()) {
         cameraRadius -= GetMouseWheelMove() * 1.5f;
         if (cameraRadius < 5.0f) cameraRadius = 5.0f;
@@ -36,14 +36,13 @@ int main() {
         if (cameraAngle.y > 1.5f) cameraAngle.y = 1.5f;
         if (cameraAngle.y < -1.5f) cameraAngle.y = -1.5f;
 
+        // Spherical coordinates mapping 
         camera.position.x = sinf(cameraAngle.x) * cosf(cameraAngle.y) * cameraRadius;
         camera.position.y = sinf(cameraAngle.y) * cameraRadius;
         camera.position.z = cosf(cameraAngle.x) * cosf(cameraAngle.y) * cameraRadius;
 
         BeginDrawing();
-
         ClearBackground(RAYWHITE);
-
         BeginMode3D(camera);
 
         DrawCube(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, MAROON);
@@ -58,7 +57,8 @@ int main() {
 
         EndDrawing();
     }
+}
 
+void App::Cleanup() {
     CloseWindow();
-    return 0;
 }
