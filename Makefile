@@ -1,20 +1,22 @@
-CXX ?= g++
-CXXFLAGS = -O2 $(shell pkg-config --cflags raylib)
-LDFLAGS = $(shell pkg-config --libs raylib)
-TARGET = 3d-cube
+CXX      ?= g++
+CXXFLAGS  = -O2 $(shell pkg-config --cflags raylib)
+LDFLAGS   = $(shell pkg-config --libs raylib)
+TARGET    = 3d-cube
 
-SRCS = $(wildcard src/*.cpp)
-OBJS = $(patsubst src/%.cpp,build/%.o,$(SRCS))
+# Recursively find all .cpp files under src/
+SRCS = $(shell find src -name '*.cpp')
 
-all: build_dir $(TARGET)
+# Mirror the src/ tree under build/
+OBJS = $(patsubst src/%.cpp, build/%.o, $(SRCS))
 
-build_dir:
-	mkdir -p build
+all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS)
 
-build/%.o: src/%.cpp | build_dir
+# Compile each .cpp, creating subdirs under build/ as needed
+build/%.o: src/%.cpp
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 run: all
