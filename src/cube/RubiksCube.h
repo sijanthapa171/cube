@@ -2,11 +2,18 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <vector>
+#include <string>
 
 struct CubieState {
     Vector3 pos;
     Matrix transform;
     Color up, down, front, back, right, left;
+};
+
+struct MoveCmd {
+    int axis;
+    std::vector<int> slices;
+    int direction;
 };
 
 class RubiksCube {
@@ -16,8 +23,11 @@ public:
     void Draw();
     
     bool StartRotation(int axis, int slice, int direction);
+    bool StartMultiSliceRotation(int axis, const std::vector<int>& slices, int direction);
+    void ExecuteMove(const char* notation);
 
     bool IsAnimating() const { return isAnimating; }
+    bool IsBusy() const { return isAnimating || !moveQueue.empty(); }
 
 private:
     float cubieSize;
@@ -27,8 +37,11 @@ private:
 
     bool isAnimating;
     int animAxis;
-    int animSlice;
+    std::vector<int> animSlices;
     int animDir;
     float animAngle;
     float targetAngle;
+
+    std::vector<MoveCmd> moveQueue;
+    void ProcessQueue();
 };

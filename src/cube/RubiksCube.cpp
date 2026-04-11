@@ -1,10 +1,11 @@
 #include "cube/RubiksCube.h"
 #include "cube/Cubie.h"
 #include <math.h>
+#include <cstring>
 
 RubiksCube::RubiksCube() : 
     cubieSize(1.0f), spacing(1.05f), 
-    isAnimating(false), animAxis(0), animSlice(0), animDir(1), animAngle(0.0f), targetAngle(0.0f) 
+    isAnimating(false), animAxis(0), animDir(1), animAngle(0.0f), targetAngle(0.0f) 
 {
     Color rWhite  = { 255, 255, 255, 255 };
     Color rYellow = { 255, 213,   0, 255 };
@@ -35,11 +36,15 @@ RubiksCube::RubiksCube() :
 }
 
 bool RubiksCube::StartRotation(int axis, int slice, int direction) {
+    return StartMultiSliceRotation(axis, {slice}, direction);
+}
+
+bool RubiksCube::StartMultiSliceRotation(int axis, const std::vector<int>& slices, int direction) {
     if (isAnimating) return false;
     
     isAnimating = true;
     animAxis = axis;
-    animSlice = slice;
+    animSlices = slices;
     animDir = direction;
     animAngle = 0.0f;
     targetAngle = (PI / 2.0f) * direction;
@@ -47,8 +52,87 @@ bool RubiksCube::StartRotation(int axis, int slice, int direction) {
     return true;
 }
 
+void RubiksCube::ProcessQueue() {
+    if (moveQueue.empty()) return;
+    
+    MoveCmd cmd = moveQueue.front();
+    moveQueue.erase(moveQueue.begin());
+    StartMultiSliceRotation(cmd.axis, cmd.slices, cmd.direction);
+}
+
+void RubiksCube::ExecuteMove(const char* notation) {
+    if (IsBusy()) return;
+
+    int len = strlen(notation);
+    if (len == 0) return;
+
+    char face = notation[0];
+    bool prime = (len >= 2 && notation[1] == '\'');
+    bool dbl   = (len >= 2 && notation[1] == '2');
+
+    int axis = 0, dir = 1;
+    std::vector<int> slices;
+
+    if (face == 'R') {
+        axis = 0; slices = {1}; dir = 1;
+    } else if (face == 'L') {
+        axis = 0; slices = {-1}; dir = -1;
+    } else if (face == 'U') {
+        axis = 1; slices = {1}; dir = 1;
+    } else if (face == 'D') {
+        axis = 1; slices = {-1}; dir = -1;
+    } else if (face == 'F') {
+        axis = 2; slices = {1}; dir = 1;
+    } else if (face == 'B') {
+        axis = 2; slices = {-1}; dir = -1;
+    }
+    else if (face == 'M') {
+        axis = 0; slices = {0}; dir = -1;
+    } else if (face == 'E') {
+        axis = 1; slices = {0}; dir = -1;
+    } else if (face == 'S') {
+        axis = 2; slices = {0}; dir = 1;
+    }
+    else if (face == 'x') {
+        axis = 0; slices = {-1, 0, 1}; dir = 1;
+    } else if (face == 'y') {
+        axis = 1; slices = {-1, 0, 1}; dir = 1;
+    } else if (face == 'z') {
+        axis = 2; slices = {-1, 0, 1}; dir = 1;
+    }
+    else if (face == 'r') {
+        axis = 0; slices = {0, 1}; dir = 1;
+    } else if (face == 'l') {
+        axis = 0; slices = {-1, 0}; dir = -1;
+    } else if (face == 'u') {
+        axis = 1; slices = {0, 1}; dir = 1;
+    } else if (face == 'd') {
+        axis = 1; slices = {-1, 0}; dir = -1;
+    } else if (face == 'f') {
+        axis = 2; slices = {0, 1}; dir = 1;
+    } else if (face == 'b') {
+        axis = 2; slices = {-1, 0}; dir = -1;
+    }
+    else {
+        return;
+    }
+
+    if (prime) dir = -dir;
+
+    if (dbl) {
+        MoveCmd cmd = { axis, slices, dir };
+        StartMultiSliceRotation(cmd.axis, cmd.slices, cmd.direction);
+        moveQueue.push_back(cmd);
+    } else {
+        StartMultiSliceRotation(axis, slices, dir);
+    }
+}
+
 void RubiksCube::Update(float dt) {
-    if (!isAnimating) return;
+    if (!isAnimating) {
+        ProcessQueue();
+        if (!isAnimating) return;
+    }
 
     float speed = PI * 2.0f * dt; 
     
@@ -72,9 +156,11 @@ void RubiksCube::Update(float dt) {
         int lz = round(c.pos.z / spacing);
 
         bool inSlice = false;
-        if (animAxis == 0 && lx == animSlice) inSlice = true;
-        if (animAxis == 1 && ly == animSlice) inSlice = true;
-        if (animAxis == 2 && lz == animSlice) inSlice = true;
+        for (int s : animSlices) {
+            if (animAxis == 0 && lx == s) inSlice = true;
+            if (animAxis == 1 && ly == s) inSlice = true;
+            if (animAxis == 2 && lz == s) inSlice = true;
+        }
 
         if (inSlice) {
             c.pos = Vector3Transform(c.pos, rotMat);
@@ -84,7 +170,6 @@ void RubiksCube::Update(float dt) {
                 c.pos.x = round(c.pos.x / spacing) * spacing;
                 c.pos.y = round(c.pos.y / spacing) * spacing;
                 c.pos.z = round(c.pos.z / spacing) * spacing;
-                
             }
         }
     }

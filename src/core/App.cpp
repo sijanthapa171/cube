@@ -1,5 +1,6 @@
 #include "core/App.h"
 #include "ui/StatsPanel.h"
+#include "ui/MoveButtons.h"
 #include <math.h>
 
 App::App() :
@@ -110,6 +111,7 @@ void App::RunLoop() {
         DrawText("- Mouse Wheel to zoom in and out",        10, 80, 16, { 160, 160, 160, 255 });
 
         DrawStatsPanel(cameraRadius, cameraAngle);
+        DrawMoveButtons(rubik);
 
         EndDrawing();
     }
