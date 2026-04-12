@@ -52,6 +52,34 @@ bool RubiksCube::StartMultiSliceRotation(int axis, const std::vector<int>& slice
     return true;
 }
 
+void RubiksCube::RecordMove(int axis, const std::vector<int>& slices, int direction) {
+    struct MoveMap { int axis; std::vector<int> sl; int baseDir; const char* name; };
+    MoveMap maps[] = {
+        {0, {1},        1,  "R"}, {0, {-1},       -1, "L"},
+        {1, {1},        1,  "U"}, {1, {-1},       -1, "D"},
+        {2, {1},        1,  "F"}, {2, {-1},       -1, "B"},
+        {0, {0},       -1,  "M"}, {1, {0},        -1, "E"}, {2, {0}, 1, "S"},
+        {0, {-1,0,1},   1,  "x"}, {1, {-1,0,1},   1, "y"}, {2, {-1,0,1}, 1, "z"},
+        {0, {0,1},       1,  "r"}, {0, {-1,0},    -1, "l"},
+        {1, {0,1},       1,  "u"}, {1, {-1,0},    -1, "d"},
+        {2, {0,1},       1,  "f"}, {2, {-1,0},    -1, "b"},
+    };
+
+    for (auto& m : maps) {
+        if (m.axis == axis && m.sl == slices) {
+            std::string notation = m.name;
+            if (direction != m.baseDir) notation += "'";
+            moveHistory.push_back(notation);
+            return;
+        }
+    }
+    // Fallback: generic label
+    std::string label = "A" + std::to_string(axis) + "S";
+    for (int s : slices) label += std::to_string(s);
+    if (direction < 0) label += "'";
+    moveHistory.push_back(label);
+}
+
 void RubiksCube::ProcessQueue() {
     if (moveQueue.empty()) return;
     
@@ -62,6 +90,9 @@ void RubiksCube::ProcessQueue() {
 
 void RubiksCube::ExecuteMove(const char* notation) {
     if (IsBusy()) return;
+
+    // Record the notation string directly
+    moveHistory.push_back(std::string(notation));
 
     int len = strlen(notation);
     if (len == 0) return;
@@ -127,6 +158,7 @@ void RubiksCube::ExecuteMove(const char* notation) {
         StartMultiSliceRotation(axis, slices, dir);
     }
 }
+// Note: ExecuteMove records history itself; drag-based calls should use RecordMove separately.
 
 void RubiksCube::Update(float dt) {
     if (!isAnimating) {

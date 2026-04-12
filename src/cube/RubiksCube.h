@@ -25,9 +25,14 @@ public:
     bool StartRotation(int axis, int slice, int direction);
     bool StartMultiSliceRotation(int axis, const std::vector<int>& slices, int direction);
     void ExecuteMove(const char* notation);
+    void RecordMove(int axis, const std::vector<int>& slices, int direction);
 
     bool IsAnimating() const { return isAnimating; }
     bool IsBusy() const { return isAnimating || !moveQueue.empty(); }
+
+    const std::vector<std::string>& GetMoveHistory() const { return moveHistory; }
+    int GetMoveCount() const { return (int)moveHistory.size(); }
+    void ClearHistory() { moveHistory.clear(); }
 
 private:
     float cubieSize;
@@ -44,4 +49,6 @@ private:
 
     std::vector<MoveCmd> moveQueue;
     void ProcessQueue();
+
+    std::vector<std::string> moveHistory;
 };

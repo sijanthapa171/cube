@@ -1,6 +1,7 @@
 #include "core/App.h"
 #include "ui/StatsPanel.h"
 #include "ui/MoveButtons.h"
+#include "ui/MoveHistory.h"
 #include <math.h>
 
 App::App() :
@@ -84,6 +85,7 @@ void App::RunLoop() {
                         }
                     }
 
+                    rubik.RecordMove(axis, {slice}, dir);
                     rubik.StartRotation(axis, slice, dir);
                     isDraggingRight = false;
                 }
@@ -112,6 +114,7 @@ void App::RunLoop() {
 
         DrawStatsPanel(cameraRadius, cameraAngle);
         DrawMoveButtons(rubik);
+        DrawMoveHistory(rubik);
 
         EndDrawing();
     }
