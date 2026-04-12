@@ -1,6 +1,6 @@
-# 3D Interactive Rubik's Cube
+# Rubik's Cube
 
-A high-performance 3D graphics application exploring procedural 3D camera matrices, mathematical abstractions, and interactive raycasting in C++. 
+This is an original Rubik’s Cube project built in C++. It was created for fun and as a way to learn something new while exploring programming concepts.
 
 # Preview 
 
@@ -25,9 +25,3 @@ Because this project natively hooks into **Nix Flakes**, dependency matching and
    ```bash
    make run
    ```
-
-### Additional Build Commands
-- `make`: Compiles standard object assets safely routing to the `/build` folder.
-- `make clean`: Wipes the generated binary target and `/build` directory cache.
-
-
