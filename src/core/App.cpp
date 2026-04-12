@@ -40,7 +40,7 @@ void App::RunLoop() {
         if (cameraAngle.y >  1.5f) cameraAngle.y =  1.5f;
         if (cameraAngle.y < -1.5f) cameraAngle.y = -1.5f;
 
-        if (!rubik.IsAnimating()) {
+        if (!rubik.IsBusy()) {
             if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
                 Ray ray = GetMouseRay(GetMousePosition(), camera);
                 float hs = 1.5f * 1.05f; 

@@ -36,6 +36,12 @@ public:
 
     bool IsAnimating() const { return isAnimating; }
     bool IsBusy() const { return isAnimating || !moveQueue.empty(); }
+    bool IsSolving() const { return solving; }
+    bool IsScrambling() const { return scrambling; }
+
+    void Scramble();
+    void Solve();
+    void StopSolving() { solving = false; scrambling = false; moveQueue.clear(); }
 
     const std::vector<MoveRecord>& GetMoveHistory() const { return moveHistory; }
     int GetMoveCount() const { return (int)moveHistory.size(); }
@@ -61,6 +67,9 @@ private:
 
     std::vector<MoveCmd> moveQueue;
     void ProcessQueue();
+
+    bool solving;
+    bool scrambling;
 
     std::vector<MoveRecord> moveHistory;
     std::vector<MoveRecord> redoStack;

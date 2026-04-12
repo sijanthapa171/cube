@@ -33,7 +33,7 @@ void DrawMoveHistory(RubiksCube& cube) {
     int sh = GetScreenHeight();
 
     int panelW = 230;
-    int panelH = 260;
+    int panelH = 300;
     int panelX = sw - panelW - 10;
     int panelY = sh - panelH - 10;
 
@@ -50,17 +50,36 @@ void DrawMoveHistory(RubiksCube& cube) {
     int totalBtnW = btnW * 2 + btnGap;
     int btnStartX = panelX + (panelW - totalBtnW) / 2;
 
+    bool autoPlaying = cube.IsSolving() || cube.IsScrambling();
+
     Rectangle undoRect = { (float)btnStartX, (float)btnY, (float)btnW, (float)btnH };
     Rectangle redoRect = { (float)(btnStartX + btnW + btnGap), (float)btnY, (float)btnW, (float)btnH };
 
-    if (DrawHistoryButton(undoRect, "< Undo", cube.CanUndo())) {
+    if (DrawHistoryButton(undoRect, "< Undo", cube.CanUndo() && !autoPlaying)) {
         cube.UndoMove();
     }
-    if (DrawHistoryButton(redoRect, "Redo >", cube.CanRedo())) {
+    if (DrawHistoryButton(redoRect, "Redo >", cube.CanRedo() && !autoPlaying)) {
         cube.RedoMove();
     }
 
-    int divY = btnY + btnH + 6;
+    int btn2Y = btnY + btnH + 4;
+    Rectangle scrambleRect = { (float)btnStartX, (float)btn2Y, (float)btnW, (float)btnH };
+    Rectangle solveRect = { (float)(btnStartX + btnW + btnGap), (float)btn2Y, (float)btnW, (float)btnH };
+
+    bool canScramble = !cube.IsBusy() && !autoPlaying;
+    bool canSolve = !cube.IsBusy() && count > 0 && !autoPlaying;
+
+    const char* scrambleLabel = cube.IsScrambling() ? "Scrambling..." : "Scramble";
+    const char* solveLabel = cube.IsSolving() ? "Solving..." : "Solve";
+
+    if (DrawHistoryButton(scrambleRect, scrambleLabel, canScramble)) {
+        cube.Scramble();
+    }
+    if (DrawHistoryButton(solveRect, solveLabel, canSolve)) {
+        cube.Solve();
+    }
+
+    int divY = btn2Y + btnH + 6;
     DrawLine(panelX + 8, divY, panelX + panelW - 8, divY, { 60, 65, 90, 140 });
 
     if (count == 0) {

@@ -2,10 +2,13 @@
 #include "cube/Cubie.h"
 #include <math.h>
 #include <cstring>
+#include <cstdlib>
+#include <ctime>
 
 RubiksCube::RubiksCube() : 
     cubieSize(1.0f), spacing(1.05f), 
-    isAnimating(false), animAxis(0), animDir(1), animAngle(0.0f), targetAngle(0.0f) 
+    isAnimating(false), animAxis(0), animDir(1), animAngle(0.0f), targetAngle(0.0f),
+    solving(false), scrambling(false)
 {
     Color rWhite  = { 255, 255, 255, 255 };
     Color rYellow = { 255, 213,   0, 255 };
@@ -82,11 +85,80 @@ void RubiksCube::RecordMove(int axis, const std::vector<int>& slices, int direct
 }
 
 void RubiksCube::ProcessQueue() {
-    if (moveQueue.empty()) return;
+    if (moveQueue.empty()) {
+        if (solving) solving = false;
+        if (scrambling) scrambling = false;
+        return;
+    }
     
     MoveCmd cmd = moveQueue.front();
     moveQueue.erase(moveQueue.begin());
     StartMultiSliceRotation(cmd.axis, cmd.slices, cmd.direction);
+}
+
+void RubiksCube::Scramble() {
+    if (IsBusy()) return;
+    static bool seeded = false;
+    if (!seeded) { srand((unsigned)time(nullptr)); seeded = true; }
+
+    ClearHistory();
+    scrambling = true;
+
+    const char* faceMoves[] = {
+        "R", "R'", "L", "L'", "U", "U'",
+        "D", "D'", "F", "F'", "B", "B'"
+    };
+    int numMoves = 12;
+    int scrambleLen = 20;
+
+    int lastFace = -1;
+    for (int i = 0; i < scrambleLen; i++) {
+        int pick;
+        do {
+            pick = rand() % numMoves;
+        } while (pick / 2 == lastFace);
+        lastFace = pick / 2;
+
+        const char* notation = faceMoves[pick];
+        int len = strlen(notation);
+        char face = notation[0];
+        bool prime = (len >= 2 && notation[1] == '\'');
+
+        int axis = 0, dir = 1;
+        std::vector<int> slices;
+        if      (face=='R') { axis=0; slices={1};  dir=1;  }
+        else if (face=='L') { axis=0; slices={-1}; dir=-1; }
+        else if (face=='U') { axis=1; slices={1};  dir=1;  }
+        else if (face=='D') { axis=1; slices={-1}; dir=-1; }
+        else if (face=='F') { axis=2; slices={1};  dir=1;  }
+        else if (face=='B') { axis=2; slices={-1}; dir=-1; }
+        if (prime) dir = -dir;
+
+        moveHistory.push_back({ std::string(notation), axis, slices, dir });
+
+        if (i == 0) {
+            StartMultiSliceRotation(axis, slices, dir);
+        } else {
+            moveQueue.push_back({ axis, slices, dir });
+        }
+    }
+}
+
+void RubiksCube::Solve() {
+    if (IsBusy() || moveHistory.empty()) return;
+    solving = true;
+    redoStack.clear();
+
+    std::vector<MoveCmd> solveSeq;
+    for (int i = (int)moveHistory.size() - 1; i >= 0; i--) {
+        solveSeq.push_back({ moveHistory[i].axis, moveHistory[i].slices, -moveHistory[i].direction });
+    }
+    moveHistory.clear();
+
+    StartMultiSliceRotation(solveSeq[0].axis, solveSeq[0].slices, solveSeq[0].direction);
+    for (size_t i = 1; i < solveSeq.size(); i++) {
+        moveQueue.push_back(solveSeq[i]);
+    }
 }
 
 void RubiksCube::ExecuteMove(const char* notation) {
@@ -149,7 +221,10 @@ void RubiksCube::ExecuteMove(const char* notation) {
     if (prime) dir = -dir;
 
     if (dbl) {
-        moveHistory.push_back({ std::string(notation), axis, slices, dir });
+        std::string halfNotation = std::string(1, face);
+        if (prime) halfNotation += "'";
+        moveHistory.push_back({ halfNotation, axis, slices, dir });
+        moveHistory.push_back({ halfNotation, axis, slices, dir });
         redoStack.clear();
         MoveCmd cmd = { axis, slices, dir };
         StartMultiSliceRotation(cmd.axis, cmd.slices, cmd.direction);
