@@ -2,4 +2,4 @@
 #include "raylib.h"
 #include "cube/RubiksCube.h"
 
-void DrawMoveHistory(const RubiksCube& cube);
+void DrawMoveHistory(RubiksCube& cube);

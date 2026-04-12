@@ -69,15 +69,16 @@ void RubiksCube::RecordMove(int axis, const std::vector<int>& slices, int direct
         if (m.axis == axis && m.sl == slices) {
             std::string notation = m.name;
             if (direction != m.baseDir) notation += "'";
-            moveHistory.push_back(notation);
+            moveHistory.push_back({ notation, axis, slices, direction });
+            redoStack.clear();
             return;
         }
     }
-    // Fallback: generic label
     std::string label = "A" + std::to_string(axis) + "S";
     for (int s : slices) label += std::to_string(s);
     if (direction < 0) label += "'";
-    moveHistory.push_back(label);
+    moveHistory.push_back({ label, axis, slices, direction });
+    redoStack.clear();
 }
 
 void RubiksCube::ProcessQueue() {
@@ -90,9 +91,6 @@ void RubiksCube::ProcessQueue() {
 
 void RubiksCube::ExecuteMove(const char* notation) {
     if (IsBusy()) return;
-
-    // Record the notation string directly
-    moveHistory.push_back(std::string(notation));
 
     int len = strlen(notation);
     if (len == 0) return;
@@ -151,14 +149,33 @@ void RubiksCube::ExecuteMove(const char* notation) {
     if (prime) dir = -dir;
 
     if (dbl) {
+        moveHistory.push_back({ std::string(notation), axis, slices, dir });
+        redoStack.clear();
         MoveCmd cmd = { axis, slices, dir };
         StartMultiSliceRotation(cmd.axis, cmd.slices, cmd.direction);
         moveQueue.push_back(cmd);
     } else {
+        moveHistory.push_back({ std::string(notation), axis, slices, dir });
+        redoStack.clear();
         StartMultiSliceRotation(axis, slices, dir);
     }
 }
-// Note: ExecuteMove records history itself; drag-based calls should use RecordMove separately.
+
+void RubiksCube::UndoMove() {
+    if (moveHistory.empty() || IsBusy()) return;
+    MoveRecord last = moveHistory.back();
+    moveHistory.pop_back();
+    redoStack.push_back(last);
+    StartMultiSliceRotation(last.axis, last.slices, -last.direction);
+}
+
+void RubiksCube::RedoMove() {
+    if (redoStack.empty() || IsBusy()) return;
+    MoveRecord rec = redoStack.back();
+    redoStack.pop_back();
+    moveHistory.push_back(rec);
+    StartMultiSliceRotation(rec.axis, rec.slices, rec.direction);
+}
 
 void RubiksCube::Update(float dt) {
     if (!isAnimating) {

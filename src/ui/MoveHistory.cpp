@@ -1,7 +1,31 @@
 #include "ui/MoveHistory.h"
 #include <string>
 
-void DrawMoveHistory(const RubiksCube& cube) {
+static bool DrawHistoryButton(Rectangle rect, const char* label, bool enabled) {
+    Vector2 mouse = GetMousePosition();
+    bool hover = CheckCollisionPointRec(mouse, rect) && enabled;
+    bool clicked = hover && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+
+    Color bg;
+    if (!enabled)    bg = { 40, 40, 50, 140 };
+    else if (hover)  bg = { 80, 90, 130, 230 };
+    else             bg = { 50, 55, 75, 210 };
+
+    DrawRectangleRounded(rect, 0.3f, 4, bg);
+    DrawRectangleRoundedLinesEx(rect, 0.3f, 4, 1.0f,
+        hover ? (Color){140, 160, 255, 200} : (Color){70, 75, 95, 180});
+
+    int fontSize = 13;
+    int textW = MeasureText(label, fontSize);
+    int tx = rect.x + (rect.width - textW) / 2;
+    int ty = rect.y + (rect.height - fontSize) / 2;
+    Color textColor = enabled ? (Color){230, 235, 255, 255} : (Color){80, 80, 100, 140};
+    DrawText(label, tx, ty, fontSize, textColor);
+
+    return clicked;
+}
+
+void DrawMoveHistory(RubiksCube& cube) {
     const auto& history = cube.GetMoveHistory();
     int count = (int)history.size();
 
@@ -9,7 +33,7 @@ void DrawMoveHistory(const RubiksCube& cube) {
     int sh = GetScreenHeight();
 
     int panelW = 230;
-    int panelH = 220;
+    int panelH = 260;
     int panelX = sw - panelW - 10;
     int panelY = sh - panelH - 10;
 
@@ -19,17 +43,34 @@ void DrawMoveHistory(const RubiksCube& cube) {
     DrawText(TextFormat("Move History (%d)", count),
              panelX + 10, panelY + 8, 15, { 130, 200, 255, 255 });
 
-    DrawLine(panelX + 8, panelY + 28, panelX + panelW - 8, panelY + 28,
-             { 60, 65, 90, 140 });
+    int btnW = 100;
+    int btnH = 24;
+    int btnY = panelY + 28;
+    int btnGap = 8;
+    int totalBtnW = btnW * 2 + btnGap;
+    int btnStartX = panelX + (panelW - totalBtnW) / 2;
+
+    Rectangle undoRect = { (float)btnStartX, (float)btnY, (float)btnW, (float)btnH };
+    Rectangle redoRect = { (float)(btnStartX + btnW + btnGap), (float)btnY, (float)btnW, (float)btnH };
+
+    if (DrawHistoryButton(undoRect, "< Undo", cube.CanUndo())) {
+        cube.UndoMove();
+    }
+    if (DrawHistoryButton(redoRect, "Redo >", cube.CanRedo())) {
+        cube.RedoMove();
+    }
+
+    int divY = btnY + btnH + 6;
+    DrawLine(panelX + 8, divY, panelX + panelW - 8, divY, { 60, 65, 90, 140 });
 
     if (count == 0) {
-        DrawText("No moves yet", panelX + 10, panelY + 40, 14,
+        DrawText("No moves yet", panelX + 10, divY + 8, 14,
                  { 100, 100, 120, 180 });
         return;
     }
 
     int bodyX = panelX + 10;
-    int bodyY = panelY + 36;
+    int bodyY = divY + 10;
     int bodyW = panelW - 20;
     int bodyBottom = panelY + panelH - 8;
 
@@ -43,13 +84,13 @@ void DrawMoveHistory(const RubiksCube& cube) {
 
     int curX = bodyX;
     int curY = bodyY;
-    int rowCount = 0;
+
     int startIdx = 0;
     if (count > 0) {
         int testX = bodyX;
         int testRows = 1;
         for (int i = 0; i < count; i++) {
-            int tw = MeasureText(history[i].c_str(), fontSize) + 12;
+            int tw = MeasureText(history[i].notation.c_str(), fontSize) + 12;
             if (tw < 28) tw = 28;
             if (testX + tw > bodyX + bodyW && testX != bodyX) {
                 testRows++;
@@ -63,7 +104,7 @@ void DrawMoveHistory(const RubiksCube& cube) {
                 testX = bodyX;
                 testRows = 1;
                 for (int i = startIdx; i < count; i++) {
-                    int tw = MeasureText(history[i].c_str(), fontSize) + 12;
+                    int tw = MeasureText(history[i].notation.c_str(), fontSize) + 12;
                     if (tw < 28) tw = 28;
                     if (testX + tw > bodyX + bodyW && testX != bodyX) {
                         testRows++;
@@ -83,14 +124,13 @@ void DrawMoveHistory(const RubiksCube& cube) {
     }
 
     for (int i = startIdx; i < count; i++) {
-        const char* label = history[i].c_str();
+        const char* label = history[i].notation.c_str();
         int tw = MeasureText(label, fontSize) + 12;
         if (tw < 28) tw = 28;
 
         if (curX + tw > bodyX + bodyW && curX != bodyX) {
             curX = bodyX;
             curY += chipH + chipPadY;
-            rowCount++;
             if (curY + chipH > bodyBottom) break;
         }
 

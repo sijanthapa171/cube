@@ -16,6 +16,13 @@ struct MoveCmd {
     int direction;
 };
 
+struct MoveRecord {
+    std::string notation;
+    int axis;
+    std::vector<int> slices;
+    int direction;
+};
+
 class RubiksCube {
 public:
     RubiksCube();
@@ -30,9 +37,14 @@ public:
     bool IsAnimating() const { return isAnimating; }
     bool IsBusy() const { return isAnimating || !moveQueue.empty(); }
 
-    const std::vector<std::string>& GetMoveHistory() const { return moveHistory; }
+    const std::vector<MoveRecord>& GetMoveHistory() const { return moveHistory; }
     int GetMoveCount() const { return (int)moveHistory.size(); }
-    void ClearHistory() { moveHistory.clear(); }
+    void ClearHistory() { moveHistory.clear(); redoStack.clear(); }
+
+    void UndoMove();
+    void RedoMove();
+    bool CanUndo() const { return !moveHistory.empty() && !IsBusy(); }
+    bool CanRedo() const { return !redoStack.empty() && !IsBusy(); }
 
 private:
     float cubieSize;
@@ -50,5 +62,6 @@ private:
     std::vector<MoveCmd> moveQueue;
     void ProcessQueue();
 
-    std::vector<std::string> moveHistory;
+    std::vector<MoveRecord> moveHistory;
+    std::vector<MoveRecord> redoStack;
 };
