@@ -107,7 +107,7 @@ void App::RunLoop() {
         rubik.Draw();
         EndMode3D();
 
-        DrawText("3D Rubik's Cube",                        10, 10, 20, { 220, 220, 220, 255 });
+        DrawText("Rubik's Cube",                        10, 10, 20, { 220, 220, 220, 255 });
         DrawText("- Right Click + Drag to rotate a slice", 10, 40, 16, { 160, 160, 160, 255 });
         DrawText("- Left Click + Drag to view 360 degrees", 10, 60, 16, { 160, 160, 160, 255 });
         DrawText("- Mouse Wheel to zoom in and out",        10, 80, 16, { 160, 160, 160, 255 });
